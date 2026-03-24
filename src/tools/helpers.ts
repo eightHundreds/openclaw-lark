@@ -240,7 +240,7 @@ export function checkToolRegistration(api: OpenClawPluginApi, toolName: string):
   if (!api.config) return false;
 
   if (!shouldRegisterTool(api.config, toolName)) {
-    api.logger.info?.(`${toolName}: Skipped registration (in deny list)`);
+    api.logger.debug?.(`${toolName}: Skipped registration (in deny list)`);
     return false;
   }
 
