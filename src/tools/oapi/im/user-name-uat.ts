@@ -135,9 +135,6 @@ export async function batchResolveUserNamesAsUser(params: {
             },
             opts,
           ),
-        {
-          as: 'user',
-        },
       );
 
       const users = res?.data?.users ?? [];

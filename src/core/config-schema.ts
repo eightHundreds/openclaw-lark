@@ -126,6 +126,12 @@ export const UATConfigSchema = z
   })
   .optional();
 
+const InvokeAsValue = z.enum(['user', 'tenant']);
+
+const InvokeAsSchema = z
+  .union([InvokeAsValue, z.record(z.string(), InvokeAsValue)])
+  .optional();
+
 const DmConfigSchema = z
   .object({
     historyLimit: z.number().optional(),
@@ -194,6 +200,7 @@ export const FeishuAccountConfigSchema = z.object({
   reactionNotifications: ReactionNotificationModeSchema,
   threadSession: z.boolean().optional(),
   uat: UATConfigSchema,
+  invokeAs: InvokeAsSchema,
 });
 
 // ---------------------------------------------------------------------------

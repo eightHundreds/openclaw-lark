@@ -259,7 +259,6 @@ export function registerFeishuSearchDocWikiTool(api: OpenClawPluginApi): boolean
                     _opts,
                   );
                 },
-                { as: 'user' },
               );
 
               // 检查响应

@@ -320,9 +320,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`create: created record ${res.data?.record?.record_id}`);
@@ -373,9 +371,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`update: updated record ${p.record_id}`);
@@ -403,9 +399,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`delete: deleted record ${p.record_id}`);
@@ -470,9 +464,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`batch_create: created ${p.records.length} records in table ${p.table_id}`);
@@ -537,9 +529,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`batch_update: updated ${p.records.length} records in table ${p.table_id}`);
@@ -583,9 +573,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`batch_delete: deleted ${p.record_ids.length} records from table ${p.table_id}`);
@@ -644,9 +632,7 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
                       data: searchData,
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               const data = res.data as PaginatedData | undefined;

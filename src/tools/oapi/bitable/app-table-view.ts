@@ -152,9 +152,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`create: created view ${res.data?.view?.view_id}`);
@@ -182,9 +180,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`get: returned view ${p.view_id}`);
@@ -215,9 +211,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               const data = res.data as PaginatedData | undefined;
@@ -254,9 +248,7 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`patch: updated view ${p.view_id}`);

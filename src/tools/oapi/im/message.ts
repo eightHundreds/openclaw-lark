@@ -321,9 +321,6 @@ export function registerFeishuImUserMessageTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                {
-                  as: 'user',
-                },
               );
               assertLarkOk(res);
 
@@ -363,9 +360,6 @@ export function registerFeishuImUserMessageTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                {
-                  as: 'user',
-                },
               );
               assertLarkOk(res);
 

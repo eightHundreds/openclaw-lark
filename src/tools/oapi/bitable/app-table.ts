@@ -183,9 +183,7 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`create: created table ${res.data?.table_id}`);
@@ -217,9 +215,7 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               const data = res.data as PaginatedData | undefined;
@@ -253,9 +249,7 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`patch: updated table ${p.table_id}`);
@@ -290,9 +284,7 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`batch_create: created ${p.tables.length} tables in app ${p.app_token}`);

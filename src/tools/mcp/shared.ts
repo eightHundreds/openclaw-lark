@@ -261,9 +261,6 @@ export function registerMcpTool<T extends Record<string, unknown>>(
               }
               return callMcpTool(config.mcpToolName, p, toolCallId, uat, brand);
             },
-            {
-              as: 'user',
-            },
           );
 
           const duration = Date.now() - startTime;

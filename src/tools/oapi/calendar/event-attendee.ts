@@ -178,7 +178,6 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -212,7 +211,6 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

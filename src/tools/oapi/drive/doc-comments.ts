@@ -175,7 +175,6 @@ async function assembleCommentsWithReplies(
                 },
                 opts,
               ),
-            { as: 'user' },
           );
 
           const replyData = replyRes.data as CommentReplyListData | undefined;
@@ -250,7 +249,6 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(wikiNodeRes as any);
 
@@ -297,7 +295,6 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
             );
             assertLarkOk(res as any);
 
@@ -357,7 +354,6 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
             );
             assertLarkOk(res as any);
 
@@ -399,7 +395,6 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
                   },
                   opts,
                 ),
-              { as: 'user' },
             );
             assertLarkOk(res as any);
 

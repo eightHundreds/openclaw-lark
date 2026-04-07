@@ -222,7 +222,6 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
   );
   assertLarkOk(createRes);
 
@@ -261,7 +260,6 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
   );
 
   const fileToken = uploadRes?.file_token ?? uploadRes?.data?.file_token;
@@ -315,7 +313,6 @@ async function handleInsert(
         },
         opts,
       ),
-    { as: 'user' },
   );
   assertLarkOk(patchRes);
   log.info(`insert: patched ${mediaType} block with file_token`);
@@ -342,13 +339,11 @@ async function handleDownload(
     res = await client.invoke(
       'feishu_doc_media.download',
       (sdk, opts) => sdk.drive.v1.media.download({ path: { file_token: p.resource_token } }, opts),
-      { as: 'user' },
     );
   } else {
     res = await client.invoke(
       'feishu_doc_media.download',
       (sdk, opts) => sdk.board.v1.whiteboard.downloadAsImage({ path: { whiteboard_id: p.resource_token } }, opts),
-      { as: 'user' },
     );
   }
 
