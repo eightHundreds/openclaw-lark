@@ -153,19 +153,26 @@ function buildAuthHeader(): string | undefined {
 // MCP JSON-RPC 客户端
 // ---------------------------------------------------------------------------
 
+export interface McpTokenInfo {
+  /** Token 字符串 */
+  token: string;
+  /** Token 类型：UAT（用户身份）或 TAT（应用身份） */
+  type: 'uat' | 'tat';
+}
+
 /**
  * 调用 MCP 工具
  * @param name MCP 工具名称
  * @param args 工具参数
  * @param toolCallId 工具调用 ID
- * @param uat 用户访问令牌(由 invoke 权限检查后传入)
+ * @param tokenInfo 访问令牌信息（UAT 或 TAT）
  * @param brand 当前账号品牌，用于选择 MCP 端点域名
  */
 export async function callMcpTool(
   name: string,
   args: Record<string, unknown>,
   toolCallId: string,
-  uat: string,
+  tokenInfo: McpTokenInfo,
   brand?: LarkBrand,
 ): Promise<unknown> {
   const endpoint = getMcpEndpoint(brand);
@@ -181,9 +188,12 @@ export async function callMcpTool(
     },
   };
 
+  const tokenHeader =
+    tokenInfo.type === 'tat' ? 'X-Lark-MCP-TAT' : 'X-Lark-MCP-UAT';
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Lark-MCP-UAT': uat,
+    [tokenHeader]: tokenInfo.token,
     'X-Lark-MCP-Allowed-Tools': name,
     'User-Agent': getUserAgent(),
   };
@@ -252,14 +262,25 @@ export function registerMcpTool<T extends Record<string, unknown>>(
 
           // 通过 invoke 进行权限检查并调用 MCP
           // 严格模式：必须拥有 toolActionKey 所需的所有 scope
+          // 支持 UAT（用户身份）和 TAT（应用身份）两种模式：
+          // - UAT 模式：invoke 回调的 uat 参数有值
+          // - TAT 模式：invoke 回调的 uat 为 undefined，通过 sdk.tokenManager 获取 TAT
           const result = await client.invoke(
             config.toolActionKey,
-            async (_sdk, _opts, uat) => {
-              // 权限检查已通过，直接使用 invoke 传入的 UAT
-              if (!uat) {
-                throw new Error('UAT not available');
+            async (sdk, _opts, uat) => {
+              let tokenInfo: McpTokenInfo;
+              if (uat) {
+                tokenInfo = { token: uat, type: 'uat' };
+              } else {
+                // TAT 模式：从 SDK tokenManager 获取 tenant_access_token
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const tat: string = await (sdk as any).tokenManager.getTenantAccessToken();
+                if (!tat) {
+                  throw new Error('Failed to obtain tenant_access_token');
+                }
+                tokenInfo = { token: tat, type: 'tat' };
               }
-              return callMcpTool(config.mcpToolName, p, toolCallId, uat, brand);
+              return callMcpTool(config.mcpToolName, p, toolCallId, tokenInfo, brand);
             },
           );
 
