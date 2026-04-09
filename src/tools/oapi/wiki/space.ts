@@ -191,6 +191,7 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
+                { as: 'user' },
               );
               assertLarkOk(res);
 

@@ -532,6 +532,7 @@ function registerSearchMessages(api: OpenClawPluginApi): boolean {
                 },
                 opts!,
               ),
+            { as: 'user' },
           );
           assertLarkOk(searchRes as any);
 
