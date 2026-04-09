@@ -141,9 +141,7 @@ export function registerFeishuBitableAppTool(api: OpenClawPluginApi): void {
                       data,
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`create: created app ${res.data?.app?.app_token}`);
@@ -169,9 +167,7 @@ export function registerFeishuBitableAppTool(api: OpenClawPluginApi): void {
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`get: returned app ${p.app_token}`);
@@ -199,9 +195,7 @@ export function registerFeishuBitableAppTool(api: OpenClawPluginApi): void {
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               // 筛选出 type === "bitable" 的文件
@@ -243,9 +237,7 @@ export function registerFeishuBitableAppTool(api: OpenClawPluginApi): void {
                       data: updateData,
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`patch: updated app ${p.app_token}`);
@@ -278,9 +270,7 @@ export function registerFeishuBitableAppTool(api: OpenClawPluginApi): void {
                       data,
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`copy: created copy ${res.data?.app?.app_token}`);

@@ -186,7 +186,6 @@ export function registerFeishuTaskSubtaskTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -220,7 +219,6 @@ export function registerFeishuTaskSubtaskTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

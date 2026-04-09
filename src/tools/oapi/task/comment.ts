@@ -129,7 +129,6 @@ export function registerFeishuTaskCommentTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -165,7 +164,6 @@ export function registerFeishuTaskCommentTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -200,7 +198,6 @@ export function registerFeishuTaskCommentTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

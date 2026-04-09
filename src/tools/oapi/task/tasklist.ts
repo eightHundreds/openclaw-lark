@@ -183,7 +183,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -214,7 +213,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -244,7 +242,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -281,7 +278,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -334,7 +330,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -380,7 +375,6 @@ export function registerFeishuTaskTasklistTool(api: OpenClawPluginApi): void {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

@@ -41,7 +41,6 @@ async function resolveP2PChatId(
     method: 'POST',
     body: { chatter_ids: [openId] },
     query: { user_id_type: 'open_id' },
-    as: 'user',
   });
 
   const chats = res.data?.p2p_chats;
@@ -206,9 +205,6 @@ function registerGetMessages(api: OpenClawPluginApi): boolean {
                 },
                 opts,
               ),
-            {
-              as: 'user',
-            },
           );
           assertLarkOk(res);
 
@@ -286,9 +282,6 @@ function registerGetThreadMessages(api: OpenClawPluginApi): boolean {
                 },
                 opts,
               ),
-            {
-              as: 'user',
-            },
           );
           assertLarkOk(res);
 
@@ -416,7 +409,6 @@ async function fetchChatContexts(
       method: 'POST',
       body: { chat_ids: chatIds },
       query: { user_id_type: 'open_id' },
-      as: 'user',
     });
     logInfo(`batch_query: response code=${res.code}, msg=${res.msg}, items=${res.data?.items?.length ?? 0}`);
     if (res.code !== 0) {
@@ -540,9 +532,6 @@ function registerSearchMessages(api: OpenClawPluginApi): boolean {
                 },
                 opts!,
               ),
-            {
-              as: 'user',
-            },
           );
           assertLarkOk(searchRes as any);
 
@@ -564,7 +553,6 @@ function registerSearchMessages(api: OpenClawPluginApi): boolean {
           }>('feishu_im_user_search_messages.default', `/open-apis/im/v1/messages/mget?${queryStr}`, {
             method: 'GET',
             query: { user_id_type: 'open_id', card_msg_content_type: 'raw_card_content' },
-            as: 'user',
           });
           const items = mgetRes.data?.items ?? [];
           log.info(`mget: ${items.length} details`);

@@ -132,7 +132,6 @@ export function registerFeishuCalendarFreebusyTool(api: OpenClawPluginApi): void
                 },
                 opts,
               ),
-            { as: 'user' },
           );
           assertLarkOk(res);
 

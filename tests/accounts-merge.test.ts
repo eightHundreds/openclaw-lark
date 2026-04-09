@@ -218,6 +218,62 @@ describe('mergeAccountConfig – deep merge for nested objects', () => {
     });
   });
 
+  it('invokeAs string value inherits from top level', () => {
+    const cfg = makeCfg({
+      appId: 'base',
+      appSecret: 'secret',
+      invokeAs: 'tenant',
+      accounts: {
+        a: { appId: 'a', appSecret: 'sa' },
+      },
+    });
+
+    const account = getLarkAccount(cfg, 'a');
+    expect(account.config.invokeAs).toBe('tenant');
+  });
+
+  it('invokeAs record at account level replaces top-level string', () => {
+    const cfg = makeCfg({
+      appId: 'base',
+      appSecret: 'secret',
+      invokeAs: 'tenant',
+      accounts: {
+        a: { appId: 'a', appSecret: 'sa', invokeAs: { drive: 'user' } },
+      },
+    });
+
+    const account = getLarkAccount(cfg, 'a');
+    expect(account.config.invokeAs).toEqual({ drive: 'user' });
+  });
+
+  it('invokeAs record at account level deep-merges with top-level record', () => {
+    const cfg = makeCfg({
+      appId: 'base',
+      appSecret: 'secret',
+      invokeAs: { drive: 'tenant', wiki: 'tenant' },
+      accounts: {
+        a: { appId: 'a', appSecret: 'sa', invokeAs: { wiki: 'user', calendar: 'tenant' } },
+      },
+    });
+
+    const account = getLarkAccount(cfg, 'a');
+    expect(account.config.invokeAs).toEqual({ drive: 'tenant', wiki: 'user', calendar: 'tenant' });
+  });
+
+  it('invokeAs account-level string overrides top-level record', () => {
+    const cfg = makeCfg({
+      appId: 'base',
+      appSecret: 'secret',
+      invokeAs: { drive: 'tenant', wiki: 'tenant' },
+      accounts: {
+        a: { appId: 'a', appSecret: 'sa', invokeAs: 'user' },
+      },
+    });
+
+    const account = getLarkAccount(cfg, 'a');
+    expect(account.config.invokeAs).toBe('user');
+  });
+
   it('scalar fields override correctly', () => {
     const cfg = makeCfg({
       appId: 'base',

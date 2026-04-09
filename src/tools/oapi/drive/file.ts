@@ -348,7 +348,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -386,7 +385,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -422,7 +420,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -453,7 +450,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -486,7 +482,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -570,7 +565,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                       },
                       opts,
                     ),
-                  { as: 'user' },
                 );
                 assertLarkOk(res);
 
@@ -601,7 +595,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                       },
                       opts,
                     ),
-                  { as: 'user' },
                 );
 
                 log.info(`upload: prepareRes = ${JSON.stringify(prepareRes)}`);
@@ -638,7 +631,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                         },
                         opts,
                       ),
-                    { as: 'user' },
                   );
 
                   log.info(`upload: chunk ${seq + 1}/${block_num} uploaded successfully`);
@@ -658,7 +650,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                       },
                       opts,
                     ),
-                  { as: 'user' },
                 );
                 assertLarkOk(finishRes);
 
@@ -689,7 +680,6 @@ export function registerFeishuDriveFileTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
 
               // File download returns Buffer through getReadableStream

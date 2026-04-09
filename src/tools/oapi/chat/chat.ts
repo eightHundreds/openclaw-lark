@@ -123,7 +123,6 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -166,7 +165,6 @@ export function registerChatSearchTool(api: OpenClawPluginApi): boolean {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

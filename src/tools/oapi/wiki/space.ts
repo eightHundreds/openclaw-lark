@@ -135,7 +135,6 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -164,7 +163,6 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -193,7 +191,6 @@ export function registerFeishuWikiSpaceTool(api: OpenClawPluginApi): boolean {
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 

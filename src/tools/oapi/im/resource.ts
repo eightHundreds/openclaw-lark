@@ -129,9 +129,6 @@ export function registerFeishuImUserFetchResourceTool(api: OpenClawPluginApi): b
                 },
                 opts,
               ),
-            {
-              as: 'user',
-            },
           );
 
           // 响应是二进制流，使用 getReadableStream() 读取

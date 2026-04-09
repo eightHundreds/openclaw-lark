@@ -42,6 +42,7 @@ import { larkLogger } from './lark-logger';
 import { type ToolActionKey, getRequiredScopes } from './scope-manager';
 import { rawLarkRequest } from './raw-request';
 import { assertOwnerAccessStrict } from './owner-policy';
+import { resolveInvokeAs } from './invoke-identity';
 import {
   AppScopeCheckFailedError,
   AppScopeMissingError,
@@ -196,8 +197,14 @@ export class ToolClient {
     // 2. 从 scope.ts 查询 API 需要的 scopes（Required Scopes）
     const requiredScopes = getRequiredScopes(toolAction);
 
-    // 3. 决定 token 类型（默认 user，用户可通过 options.as 覆盖）
-    const tokenType = options?.as ?? 'user';
+    // 3. 决定 token 类型
+    //    优先级：显式 options.as > invokeAs 配置 > 默认 'user'
+    const explicitAs = options?.as;
+    const configAs = explicitAs ? undefined : resolveInvokeAs(this.account.config, toolAction);
+    const tokenType = explicitAs ?? configAs ?? 'user';
+
+    // tenant-first-fallback-user：仅当身份来自配置（非显式指定）且为 tenant 时启用回退
+    const shouldFallback = !explicitAs && configAs === 'tenant';
 
     // ---- App Granted Scopes 检查（应用已开通的权限）----
     // UAT 调用额外检查 offline_access（OAuth Device Flow 的前提权限），
@@ -212,6 +219,13 @@ export class ToolClient {
         // 严格模式：应用必须开通所有 Required Scopes（+ offline_access）
         const missingAppScopes = missingScopes(appGrantedScopes, appCheckScopes);
         if (missingAppScopes.length > 0) {
+          if (shouldFallback) {
+            // tenant scope 不足 → 直接回退到 user 路径
+            tcLog.info(`Tenant scope insufficient for ${toolAction}, falling back to user`, {
+              missing: missingAppScopes,
+            });
+            return this.invokeAsUserFull(toolAction, fn, requiredScopes, options);
+          }
           throw new AppScopeMissingError(
             { apiName: toolAction, scopes: missingAppScopes, appId: this.account.appId },
             'all',
@@ -228,26 +242,23 @@ export class ToolClient {
 
     // 5. 执行调用
     if (tokenType === 'tenant') {
+      if (shouldFallback) {
+        try {
+          return await this.invokeAsTenant(toolAction, fn, requiredScopes);
+        } catch (err) {
+          if (this.isTenantFallbackError(err)) {
+            tcLog.info(`Tenant invoke failed for ${toolAction}, falling back to user`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
+            return this.invokeAsUserFull(toolAction, fn, requiredScopes, options);
+          }
+          throw err;
+        }
+      }
       return this.invokeAsTenant(toolAction, fn, requiredScopes);
     }
 
-    // 5.1 获取 userOpenId，支持兜底逻辑
-    let userOpenId = options?.userOpenId ?? this.senderOpenId;
-
-    // 5.2 兜底逻辑：如果没有 senderOpenId，尝试使用应用所有者
-    if (!userOpenId) {
-      const fallbackUserId = await getAppOwnerFallback(this.account, this.sdk);
-      if (fallbackUserId) {
-        userOpenId = fallbackUserId;
-        tcLog.info(`Using app owner as fallback user`, {
-          toolAction,
-          appId: this.account.appId,
-          ownerId: fallbackUserId,
-        });
-      }
-    }
-
-    return this.invokeAsUser(toolAction, fn, requiredScopes, userOpenId, appScopeVerified);
+    return this.invokeAsUserFull(toolAction, fn, requiredScopes, options, appScopeVerified);
   }
 
   /**
@@ -308,6 +319,75 @@ export class ToolClient {
       this.rethrowStructuredError(err, toolAction, requiredScopes, undefined, 'tenant');
       throw err;
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Private: tenant-first-fallback-user helper
+  // -------------------------------------------------------------------------
+
+  /**
+   * 完整的 user 调用路径：包含 app scope 预检、userOpenId 解析和 invokeAsUser。
+   * 在 tenant-first-fallback-user 回退场景中被调用，避免与 _invokeInternal 重复逻辑。
+   */
+  private async invokeAsUserFull<T>(
+    toolAction: ToolActionKey,
+    fn: InvokeFn<T>,
+    requiredScopes: string[],
+    options?: InvokeOptions,
+    existingAppScopeVerified?: boolean,
+  ): Promise<T> {
+    let appScopeVerified = existingAppScopeVerified ?? true;
+
+    if (existingAppScopeVerified == null) {
+      const userCheckScopes = [...new Set([...requiredScopes, 'offline_access'])];
+      if (userCheckScopes.length > 0) {
+        const appGrantedScopes = await getAppGrantedScopes(this.sdk, this.account.appId, 'user');
+        if (appGrantedScopes.length > 0) {
+          const missing = missingScopes(appGrantedScopes, userCheckScopes);
+          if (missing.length > 0) {
+            throw new AppScopeMissingError(
+              { apiName: toolAction, scopes: missing, appId: this.account.appId },
+              'all',
+              'user',
+              requiredScopes,
+            );
+          }
+        } else {
+          appScopeVerified = false;
+        }
+      }
+    }
+
+    let userOpenId = options?.userOpenId ?? this.senderOpenId;
+    if (!userOpenId) {
+      const fallbackUserId = await getAppOwnerFallback(this.account, this.sdk);
+      if (fallbackUserId) {
+        userOpenId = fallbackUserId;
+        tcLog.info(`Using app owner as fallback user`, {
+          toolAction,
+          appId: this.account.appId,
+          ownerId: fallbackUserId,
+        });
+      }
+    }
+
+    return this.invokeAsUser(toolAction, fn, requiredScopes, userOpenId, appScopeVerified);
+  }
+
+  /**
+   * 判断 tenant 调用失败时是否应回退到 user。
+   *
+   * 保守策略：仅对权限/访问相关错误回退，参数错误、5xx、业务逻辑错误不回退。
+   */
+  private isTenantFallbackError(err: unknown): boolean {
+    if (err instanceof AppScopeMissingError) return true;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const code = (err as any)?.code ?? (err as any)?.response?.data?.code;
+    if (typeof code === 'number') {
+      return code === LARK_ERROR.APP_SCOPE_MISSING || code === LARK_ERROR.USER_SCOPE_INSUFFICIENT;
+    }
+    return false;
   }
 
   // -------------------------------------------------------------------------

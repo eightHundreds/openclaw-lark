@@ -179,9 +179,7 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               const data = res.data as FieldData | undefined;
@@ -215,9 +213,7 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               const data = res.data as PaginatedData | undefined;
@@ -259,9 +255,7 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                         },
                       },
                       opts,
-                    ),
-                  { as: 'user' },
-                );
+                    ),                );
                 assertLarkOk(listRes);
 
                  
@@ -308,9 +302,7 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                       data: updateData,
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`update: updated field ${p.field_id}`);
@@ -340,9 +332,7 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                       },
                     },
                     opts,
-                  ),
-                { as: 'user' },
-              );
+                  ),              );
               assertLarkOk(res);
 
               log.info(`delete: deleted field ${p.field_id}`);

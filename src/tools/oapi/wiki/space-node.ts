@@ -233,7 +233,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -265,7 +264,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -300,7 +298,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -334,7 +331,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
@@ -370,7 +366,6 @@ export function registerFeishuWikiSpaceNodeTool(api: OpenClawPluginApi): boolean
                     },
                     opts,
                   ),
-                { as: 'user' },
               );
               assertLarkOk(res);
 
