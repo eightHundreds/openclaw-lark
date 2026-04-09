@@ -67,6 +67,7 @@ export function registerGetUserTool(api: OpenClawPluginApi): void {
               const res = await client.invoke(
                 'feishu_get_user.default',
                 (sdk, opts) => sdk.authen.userInfo.get({}, opts),
+                { as: 'user' },
               );
               assertLarkOk(res);
 
