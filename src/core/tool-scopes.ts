@@ -273,8 +273,10 @@ export const TOOL_SCOPES: ToolScopeMapping = {
   'feishu_im_user_message.send': ['im:message', 'im:message.send_as_user'],
   'feishu_im_user_message.reply': ['im:message', 'im:message.send_as_user'],
   'feishu_im_user_fetch_resource.default': [
-    'im:message.group_msg:get_as_user',
-    'im:message.p2p_msg:get_as_user',
+    // 移除 im:message.group_msg:get_as_user 和 im:message.p2p_msg:get_as_user。
+    // 底层接口 im.v1.messageResource.get 只需要 im:message:readonly
+    // （或 im:message / im:message.history:readonly）。
+    // 这两个 as_user scope 是从同组 IM 读取工具复制过来的，该资源下载接口并不需要。
     'im:message:readonly',
   ],
   'feishu_im_user_get_messages.default': [
