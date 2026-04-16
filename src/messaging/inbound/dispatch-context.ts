@@ -115,20 +115,22 @@ export async function buildDispatchContext(params: {
     // Use a routing-specific cache key that includes senderId to avoid
     // shared-session collisions (e.g. DM main session shared across users).
     const routeCacheKey = `${route.sessionKey}:${ctx.senderId}`;
+    const peer = { kind: (isGroup ? 'group' : 'direct') as 'group' | 'direct', id: isGroup ? ctx.chatId : ctx.senderId };
+
+    const applyScriptRoute = (agentId: string) => {
+      const sessionKey = core.channel.routing.buildAgentSessionKey({
+        agentId,
+        channel: 'feishu',
+        accountId: account.accountId,
+        peer,
+      });
+      route = { ...route, agentId, sessionKey };
+    };
+
     const cached = getCachedRoute(routeCacheKey);
     if (cached) {
       log('script-router: cache hit %s → agent %s', routeCacheKey, cached);
-      // Re-resolve route with the cached agentId to get correct sessionKey
-      route = core.channel.routing.resolveAgentRoute({
-        cfg: accountScopedCfg,
-        channel: 'feishu',
-        accountId: account.accountId,
-        peer: {
-          kind: isGroup ? 'group' : 'direct',
-          id: isGroup ? ctx.chatId : ctx.senderId,
-        },
-        agentId: cached,
-      });
+      applyScriptRoute(cached);
     } else {
       const input: ScriptRouterInput = {
         senderId: ctx.senderId,
@@ -152,17 +154,7 @@ export async function buildDispatchContext(params: {
       if (result) {
         setCachedRoute(routeCacheKey, result.agentId, routing.cacheTtl ?? 300_000);
         log('script-router: routed %s → agent %s', routeCacheKey, result.agentId);
-        // Re-resolve route with script agentId to get correct sessionKey
-        route = core.channel.routing.resolveAgentRoute({
-          cfg: accountScopedCfg,
-          channel: 'feishu',
-          accountId: account.accountId,
-          peer: {
-            kind: isGroup ? 'group' : 'direct',
-            id: isGroup ? ctx.chatId : ctx.senderId,
-          },
-          agentId: result.agentId,
-        });
+        applyScriptRoute(result.agentId);
       }
     }
   }
