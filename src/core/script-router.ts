@@ -10,11 +10,22 @@
  * Results are cached per session+sender with configurable TTL.
  */
 
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { larkLogger } from './lark-logger';
 
 const log = larkLogger('script-router');
+
+// ---------------------------------------------------------------------------
+// State directory resolution (mirrors SDK convention)
+// ---------------------------------------------------------------------------
+
+function resolveStateDir(): string {
+  const override = process.env.OPENCLAW_STATE_DIR?.trim();
+  if (override) return override;
+  return path.join(os.homedir(), '.openclaw');
+}
 
 // ---------------------------------------------------------------------------
 // Public interfaces
@@ -82,7 +93,8 @@ export async function execRouteScript(params: {
   validAgentIds?: string[];
 }): Promise<ScriptRouterResult | null> {
   const { scriptPath, input, timeout, validAgentIds } = params;
-  const resolved = path.resolve(scriptPath);
+  // Absolute paths used as-is; relative paths resolved against OPENCLAW_STATE_DIR (~/.openclaw/)
+  const resolved = path.isAbsolute(scriptPath) ? scriptPath : path.resolve(resolveStateDir(), scriptPath);
 
   log.info('executing route script', { script: resolved, timeout });
 
