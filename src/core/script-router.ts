@@ -45,8 +45,40 @@ export interface ScriptRouterResult {
   agentId: string;
 }
 
+export interface ScriptRouterApi {
+  logger: {
+    info: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    error: (...args: unknown[]) => void;
+  };
+}
+
+/**
+ * Create a ScriptRouterApi logger that adapts LarkLogger's
+ * (message, meta?) signature to a variadic (...args) interface
+ * that is simpler for external script authors.
+ */
+function createScriptRouterApi(): ScriptRouterApi {
+  const inner = larkLogger('route-script');
+  const adapt =
+    (fn: (message: string, meta?: Record<string, unknown>) => void) =>
+    (...args: unknown[]) => {
+      fn(args.map(String).join(' '));
+    };
+  return {
+    logger: {
+      info: adapt(inner.info.bind(inner)),
+      warn: adapt(inner.warn.bind(inner)),
+      error: adapt(inner.error.bind(inner)),
+    },
+  };
+}
+
 /** The function signature that routing scripts must default-export. */
-export type RoutingFunction = (input: ScriptRouterInput) => ScriptRouterResult | Promise<ScriptRouterResult>;
+export type RoutingFunction = (
+  input: ScriptRouterInput,
+  api: ScriptRouterApi,
+) => ScriptRouterResult | Promise<ScriptRouterResult>;
 
 // ---------------------------------------------------------------------------
 // Session-level route cache (with TTL)
@@ -115,7 +147,7 @@ export async function execRouteScript(params: {
     }
 
     const result: unknown = await Promise.race([
-      (routeFn as RoutingFunction)(input),
+      (routeFn as RoutingFunction)(input, createScriptRouterApi()),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('route function timed out')), timeout),
       ),
