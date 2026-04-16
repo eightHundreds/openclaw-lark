@@ -116,6 +116,12 @@ const DedupSchema = z
   })
   .optional();
 
+export const FeishuRoutingSchema = z.object({
+  script: z.string().describe('外部路由脚本路径，相对于项目根目录'),
+  timeout: z.number().int().positive().default(5000).describe('脚本执行超时毫秒数'),
+  cacheTtl: z.number().int().min(0).default(300_000).describe('路由缓存 TTL 毫秒数，默认 5 分钟，设为 0 禁用缓存'),
+}).strict();
+
 const ReactionNotificationModeSchema = z.enum(['off', 'own', 'all']).optional();
 
 export const UATConfigSchema = z
@@ -203,6 +209,7 @@ export const FeishuAccountConfigSchema = z.object({
   threadSession: z.boolean().optional(),
   uat: UATConfigSchema,
   invokeAs: InvokeAsSchema,
+  routing: FeishuRoutingSchema.optional(),
 });
 
 // ---------------------------------------------------------------------------

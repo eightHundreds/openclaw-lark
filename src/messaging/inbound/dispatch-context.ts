@@ -16,6 +16,9 @@ import type { LarkAccount } from '../../core/types';
 import { LarkClient } from '../../core/lark-client';
 import { larkLogger } from '../../core/lark-logger';
 import { isThreadCapableGroup } from '../../core/chat-info-cache';
+import { execRouteScript, getCachedRoute, setCachedRoute } from '../../core/script-router';
+import type { ScriptRouterInput } from '../../core/script-router';
+import { listConfiguredAgents } from '../../core/agent-config';
 
 const log = larkLogger('inbound/dispatch-context');
 
@@ -68,13 +71,13 @@ export function ensureRuntime(runtime: RuntimeEnv | undefined): RuntimeEnv {
  * Derive all shared values needed by downstream helpers:
  * logging, addressing, route resolution, and system event emission.
  */
-export function buildDispatchContext(params: {
+export async function buildDispatchContext(params: {
   ctx: MessageContext;
   account: LarkAccount;
   accountScopedCfg: ClawdbotConfig;
   runtime?: RuntimeEnv;
   commandAuthorized?: boolean;
-}): DispatchContext {
+}): Promise<DispatchContext> {
   const { ctx, account, accountScopedCfg } = params;
 
   const runtime = ensureRuntime(params.runtime);
@@ -92,7 +95,7 @@ export function buildDispatchContext(params: {
   const envelopeOptions = core.channel.reply.resolveEnvelopeFormatOptions(accountScopedCfg);
 
   // ---- Route resolution ----
-  const route = core.channel.routing.resolveAgentRoute({
+  let route = core.channel.routing.resolveAgentRoute({
     cfg: accountScopedCfg,
     channel: 'feishu',
     accountId: account.accountId,
@@ -101,6 +104,68 @@ export function buildDispatchContext(params: {
       id: isGroup ? ctx.chatId : ctx.senderId,
     },
   });
+
+  // ---- Script-based routing override ----
+  const feishuCfg = (accountScopedCfg as Record<string, unknown>).channels as
+    | { feishu?: { routing?: { script?: string; fetchRouteTimeout?: number; cacheTtl?: number } } }
+    | undefined;
+  const routing = feishuCfg?.feishu?.routing;
+
+  if (routing?.script) {
+    // Use a routing-specific cache key that includes senderId to avoid
+    // shared-session collisions (e.g. DM main session shared across users).
+    const routeCacheKey = `${route.sessionKey}:${ctx.senderId}`;
+    const cached = getCachedRoute(routeCacheKey);
+    if (cached) {
+      log('script-router: cache hit %s → agent %s', routeCacheKey, cached);
+      // Re-resolve route with the cached agentId to get correct sessionKey
+      route = core.channel.routing.resolveAgentRoute({
+        cfg: accountScopedCfg,
+        channel: 'feishu',
+        accountId: account.accountId,
+        peer: {
+          kind: isGroup ? 'group' : 'direct',
+          id: isGroup ? ctx.chatId : ctx.senderId,
+        },
+        agentId: cached,
+      });
+    } else {
+      const input: ScriptRouterInput = {
+        senderId: ctx.senderId,
+        senderName: ctx.senderName,
+        chatId: ctx.chatId,
+        chatType: ctx.chatType,
+        accountId: account.accountId,
+        messageType: ctx.contentType,
+        content: ctx.contentType === 'text' ? ctx.content : undefined,
+      };
+      // Pass validAgentIds only when agents.list is explicitly configured;
+      // when empty, any agentId is accepted (single-agent / default setup).
+      const configuredAgents = listConfiguredAgents(accountScopedCfg).map((a) => a.id);
+      const validAgentIds = configuredAgents.length > 0 ? configuredAgents : undefined;
+      const result = await execRouteScript({
+        scriptPath: routing.script,
+        input,
+        timeout: routing.fetchRouteTimeout ?? 5000,
+        validAgentIds,
+      });
+      if (result) {
+        setCachedRoute(routeCacheKey, result.agentId, routing.cacheTtl ?? 300_000);
+        log('script-router: routed %s → agent %s', routeCacheKey, result.agentId);
+        // Re-resolve route with script agentId to get correct sessionKey
+        route = core.channel.routing.resolveAgentRoute({
+          cfg: accountScopedCfg,
+          channel: 'feishu',
+          accountId: account.accountId,
+          peer: {
+            kind: isGroup ? 'group' : 'direct',
+            id: isGroup ? ctx.chatId : ctx.senderId,
+          },
+          agentId: result.agentId,
+        });
+      }
+    }
+  }
 
   // ---- System event ----
   const sender = ctx.senderName ? `${ctx.senderName} (${ctx.senderId})` : ctx.senderId;

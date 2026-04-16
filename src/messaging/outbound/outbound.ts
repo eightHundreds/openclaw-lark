@@ -13,10 +13,17 @@
 
 import type { ClawdbotConfig } from 'openclaw/plugin-sdk';
 import type { ChannelOutboundAdapter } from 'openclaw/plugin-sdk/channel-send-result';
+import {
+  evaluateSessionFreshness,
+  readSessionUpdatedAt,
+  resolveSessionResetPolicy,
+  resolveStorePath,
+} from 'openclaw/plugin-sdk/config-runtime';
 import type { FeishuSendResult } from '../types';
 import { LarkClient } from '../../core/lark-client';
 import { larkLogger } from '../../core/lark-logger';
-import { parseFeishuRouteTarget } from '../../core/targets';
+import { normalizeFeishuTarget, parseFeishuRouteTarget } from '../../core/targets';
+import { writePendingInbox } from '../shared/pending-inbox';
 import { sendCardLark, sendMediaLark, sendTextLark } from './deliver';
 
 const log = larkLogger('outbound/outbound');
@@ -152,6 +159,78 @@ function resolveFeishuSendContext(params: {
 }
 
 // ---------------------------------------------------------------------------
+// Pending inbox: detect stale DM sessions before delivery
+// ---------------------------------------------------------------------------
+
+/**
+ * If the outbound target is a DM user whose session is stale (idle reset
+ * threshold exceeded), write the message body into the pending inbox so
+ * the next inbound dispatch can inject it as InboundHistory context.
+ *
+ * Entire function is best-effort — failures are logged and swallowed.
+ */
+function tryWritePendingInbox(params: {
+  cfg: ClawdbotConfig;
+  to: string;
+  text: string;
+  accountId?: string;
+}): void {
+  try {
+    const { cfg, to, text, accountId } = params;
+
+    // Only handle DM targets (user:ou_xxxx)
+    const bare = normalizeFeishuTarget(to);
+    if (!bare || !bare.startsWith('ou_')) return;
+
+    const core = LarkClient.runtime;
+
+    const route = core.channel.routing.resolveAgentRoute({
+      cfg,
+      channel: 'feishu',
+      accountId: accountId ?? undefined,
+      peer: { kind: 'direct', id: bare },
+    });
+
+    const storePath = resolveStorePath(
+      (cfg as Record<string, unknown>).sessions
+        ? ((cfg as Record<string, unknown>).sessions as { store?: string }).store
+        : undefined,
+      { agentId: route.agentId },
+    );
+
+    const updatedAt = readSessionUpdatedAt({ storePath, sessionKey: route.sessionKey });
+    if (updatedAt == null) return; // no session yet — nothing to bridge
+
+    const sessionCfg = (cfg as Record<string, unknown>).sessions as
+      | Parameters<typeof resolveSessionResetPolicy>[0]['sessionCfg']
+      | undefined;
+
+    const policy = resolveSessionResetPolicy({
+      sessionCfg,
+      resetType: 'direct',
+    });
+
+    const { fresh } = evaluateSessionFreshness({
+      updatedAt,
+      now: Date.now(),
+      policy,
+    });
+
+    if (!fresh) {
+      const body = text.length > 500 ? text.slice(0, 500) + '…' : text;
+      writePendingInbox(route.sessionKey, {
+        sender: 'agent',
+        body,
+        timestamp: Date.now(),
+      });
+      log.info(`pending-inbox: wrote entry for stale session ${route.sessionKey}`);
+    }
+  } catch (err) {
+    log.info(`pending-inbox: check failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Adapter
 // ---------------------------------------------------------------------------
 
@@ -166,6 +245,7 @@ export const feishuOutbound: ChannelOutboundAdapter = {
 
   sendText: async ({ cfg, to, text, accountId, replyToId, threadId }) => {
     log.info(`sendText: target=${to}, textLength=${text.length}`);
+    tryWritePendingInbox({ cfg, to, text, accountId: accountId ?? undefined });
     const ctx = resolveFeishuSendContext({ cfg, to, accountId, replyToId, threadId });
     const result = await sendTextLark({ ...ctx, to: ctx.to, text });
     return { channel: 'feishu', ...result };
@@ -205,6 +285,11 @@ export const feishuOutbound: ChannelOutboundAdapter = {
     // --- Resolve text + media from payload ---
     const text = payload.text ?? '';
     const mediaUrls = payload.mediaUrls?.length ? payload.mediaUrls : payload.mediaUrl ? [payload.mediaUrl] : [];
+
+    // Write pending inbox for stale DM sessions (text portion only)
+    if (text.trim()) {
+      tryWritePendingInbox({ cfg, to, text, accountId: accountId ?? undefined });
+    }
 
     log.info(
       `sendPayload: target=${to}, ` +

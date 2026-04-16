@@ -46,6 +46,7 @@ import {
   buildMessageBody,
 } from './dispatch-builders';
 import { type DispatchContext, buildDispatchContext, resolveThreadSessionKey } from './dispatch-context';
+import { readAndClearPendingInbox } from '../shared/pending-inbox';
 import type { PermissionError } from './permission';
 import { mentionedBot } from './mention';
 import { resolveRespondToMentionAll } from './gate';
@@ -193,7 +194,7 @@ export async function dispatchToAgent(params: {
   skipTyping?: boolean;
 }): Promise<void> {
   // 1. Derive shared context (including route resolution + system event)
-  const dc = buildDispatchContext(params);
+  const dc = await buildDispatchContext(params);
 
   // 1a. Thread detection fallback for topic groups.
   //     In topic groups (chat_mode=topic), reply events may carry root_id
@@ -254,7 +255,7 @@ export async function dispatchToAgent(params: {
   //    The SDK's buildInboundUserContextPrefix renders these as structured
   //    JSON blocks; earlier SDK versions simply ignore unknown fields.
   const threadHistoryKey = threadScopedKey(dc.ctx.chatId, dc.isThread ? dc.ctx.threadId : undefined);
-  const inboundHistory =
+  let inboundHistory =
     dc.isGroup && params.chatHistories && params.historyLimit > 0
       ? (params.chatHistories.get(threadHistoryKey) ?? []).map((entry) => ({
           sender: entry.sender,
@@ -262,6 +263,20 @@ export async function dispatchToAgent(params: {
           timestamp: entry.timestamp ?? Date.now(),
         }))
       : undefined;
+
+  // 6a. Merge pending inbox entries (cross-user outbound messages sent
+  //     while the target session was stale). These are placed before
+  //     existing chat history since they arrived earlier.
+  const effectiveSessionKey = dc.threadSessionKey ?? dc.route.sessionKey;
+  const pendingEntries = readAndClearPendingInbox(effectiveSessionKey);
+  if (pendingEntries) {
+    const mapped = pendingEntries.map((e) => ({
+      sender: e.sender,
+      body: e.body,
+      timestamp: e.timestamp,
+    }));
+    inboundHistory = inboundHistory ? [...mapped, ...inboundHistory] : mapped;
+  }
 
   // 7. Build inbound context payload
   const isBareNewOrReset = /^\/(?:new|reset)\s*$/i.test((params.ctx.content ?? '').trim());

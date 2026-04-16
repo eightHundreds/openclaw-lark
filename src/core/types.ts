@@ -13,6 +13,7 @@ import type {
   FeishuAccountConfigSchema,
   FeishuConfigSchema,
   FeishuGroupSchema,
+  FeishuRoutingSchema,
   UATConfigSchema,
   z,
 } from './config-schema';
@@ -29,6 +30,9 @@ export type FeishuGroupConfig = z.infer<typeof FeishuGroupSchema>;
 
 /** Per-account configuration overrides (mirrors top-level minus `accounts`). */
 export type FeishuAccountConfig = z.infer<typeof FeishuAccountConfigSchema>;
+
+/** External routing script configuration for dynamic agent routing. */
+export type FeishuRoutingConfig = z.infer<typeof FeishuRoutingSchema>;
 
 // ---------------------------------------------------------------------------
 // Domain & connection enums
