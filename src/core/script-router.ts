@@ -59,7 +59,7 @@ export interface ScriptRouterApi {
  * that is simpler for external script authors.
  */
 function createScriptRouterApi(): ScriptRouterApi {
-  const inner = larkLogger('route-script');
+  const inner = larkLogger('in-route-script');
   const adapt =
     (fn: (message: string, meta?: Record<string, unknown>) => void) =>
     (...args: unknown[]) => {

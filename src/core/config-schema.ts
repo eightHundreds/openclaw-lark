@@ -117,8 +117,8 @@ const DedupSchema = z
   .optional();
 
 export const FeishuRoutingSchema = z.object({
-  script: z.string().describe('外部路由脚本路径，相对于项目根目录'),
-  timeout: z.number().int().positive().default(5000).describe('脚本执行超时毫秒数'),
+  script: z.string().describe('外部路由脚本路径，相对于 OPENCLAW_STATE_DIR（默认 ~/.openclaw/）'),
+  fetchRouteTimeout: z.number().int().positive().default(5000).describe('脚本执行超时毫秒数'),
   cacheTtl: z.number().int().min(0).default(300_000).describe('路由缓存 TTL 毫秒数，默认 5 分钟，设为 0 禁用缓存'),
 }).strict();
 
